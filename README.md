@@ -4,75 +4,64 @@
     </a>
 </p>
 
-# X
-
-> Experimental and Development Packages for Leraniode/ projects
+# xgo
 
 [![part of leraniode](https://raw.githubusercontent.com/leraniode/.github/main/assets/badges/partofleraniode.svg)](https://github.com/leraniode)
-[![experimental-leraniode](https://raw.githubusercontent.com/leraniode/.github/main/assets/badges/experimentalleraniode.svg)](https://github.com/orgs/leraniode/repositories?q=x)
-
----
-
-## xgo
-
+[![experimental](https://raw.githubusercontent.com/leraniode/.github/main/assets/badges/experimentalleraniode.svg)](https://github.com/orgs/leraniode/repositories?q=x)
 [![license](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
-[![Status](https://img.shields.io/badge/status-experimental-orange)]()
+[![CI](https://github.com/leraniode/xgo/actions/workflows/ci.yml/badge.svg)](https://github.com/leraniode/xgo/actions/workflows/ci.yml)
 
-Experimental Go libraries used for development and testing in Projects under [Leraniode](https://github.com/leraniode).
+> Experimental Go packages for the Leraniode ecosystem.
 
-Packages in this repository are pre-stable. APIs may break between commits.
-Each package graduates to its own repository once the algebra is proven,
-integrations are validated, and the API is stable.
+Packages here are pre-stable. APIs may break between commits.
 
 ---
 
+## Packages
 
-## Ecosystem
+### [`centrix`](./centrix)
 
-All projects under **xgo** are:
-- Part of the **Experimental Leraniode** ecosystem
-- Maintained or curated by Leraniode
+[![Go](https://img.shields.io/badge/go-1.22-00ADD8?logo=go)](https://go.dev)
+[![Tests](https://img.shields.io/badge/tests-167%20passing-brightgreen)]()
+
+Sparse signal mathematics library. Defines the types, algebra, and field dynamics
+for deterministic reasoning and generation systems.
+
+```go
+import "github.com/leraniode/xgo/centrix/core"
+import "github.com/leraniode/xgo/centrix/field"
+import "github.com/leraniode/xgo/centrix/registry"
+```
+
+**Status:** v0.1 complete — all 5 phases built and tested.
 
 ---
 
-### Packages
+## Structure
 
-- [`centrix`](./centrix): 
-Sparse signal mathematics library. Defines the primitives, algebra, and field
-dynamics for reasoning and generation systems.
-
-
----
-
-### Structure
-
-Each package is an independent Go module with its own `go.mod`.
-Use a `go.work` file locally to work across packages simultaneously:
+Each package is an independent Go module with its own `go.mod`. To work across
+packages simultaneously, use a local `go.work` file:
 
 ```bash
 go work init
 go work use ./centrix
 ```
 
-The `go.work` file is gitignored — it is a local development tool, not part
-of the repository.
+`go.work` is gitignored — it is a local development tool, not part of the repository.
 
 ---
 
-## Your Thoughts Matter
+## Contributing
 
-> [!NOTE]
-> Leraniode thrives on community ideas and experimentation.
-> So your contribution is welcomed!
+Experimental packages are maintained by Leraniode. Ideas, feedback, and
+discussion are welcome.
 
-If you have suggestions, feedback, or ideas for new experimental packages or improvements, join the discussion:
-
-- 💬 [Leraniode Discussions](https://github.com/leraniode/xgo/discussions)
+- 💬 [Discussions](https://github.com/leraniode/xgo/discussions)
 
 ---
 
 <p align="left">
-x-py • Experimental Leraniode • Part of Leraniode
+xgo · Experimental Leraniode · Part of Leraniode
 </p>
 
 <img
