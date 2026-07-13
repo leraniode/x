@@ -1,74 +1,77 @@
-# Centrix — Concepts, Blueprint & Mental Model
-> Status: Pre-build canonical reference · Version: 0.2
-> Module: github.com/leraniode/xgo/centrix (current)
-> Future: github.com/leraniode/centrix (standalone, when stable)
+# Centrix — Technical Reference
+> v0.1 · `github.com/leraniode/xgo/centrix` (experimental)
+> Graduating to `github.com/leraniode/centrix` when stable
 
 ---
 
-## Table of Contents
+## Contents
 
 1. [What Centrix Is](#1-what-centrix-is)
 2. [The Mental Model](#2-the-mental-model)
-3. [Core Primitives](#3-core-primitives)
+3. [Types](#3-types)
 4. [Signal Lifecycle](#4-signal-lifecycle)
-5. [The Two-Tier Algebra](#5-the-two-tier-algebra)
-6. [Confidence Update Rule](#6-confidence-update-rule)
-7. [Generation](#7-generation)
+5. [Algebra — Tier 1](#5-algebra--tier-1)
+6. [Signal Operations — Tier 2](#6-signal-operations--tier-2)
+7. [Confidence](#7-confidence)
 8. [Field Dynamics](#8-field-dynamics)
-9. [Package Structure](#9-package-structure)
-10. [Feature Space Design](#10-feature-space-design)
-11. [The Authoring Model](#11-the-authoring-model)
-12. [System Invariants](#12-system-invariants)
-13. [Example Concept Graph](#13-example-concept-graph)
+9. [Registry](#9-registry)
+10. [Authoring Model](#10-authoring-model)
+11. [Invariants](#11-invariants)
 
 ---
 
 ## 1. What Centrix Is
 
-Centrix is a sparse signal mathematics library for Go. It defines the primitives,
-algebra, and field dynamics that power reasoning and generation in systems built
-on top of it. Centrix has no knowledge of what builds on it — it is a pure
-mathematical layer.
+Centrix is a sparse signal mathematics library. It defines the types, algebra,
+and field dynamics for systems that reason and generate using sparse distributed
+representations. It is a mathematical layer — it has no knowledge of what builds
+on it.
 
-Centrix does not:
-- Know about nodes, flows, engines, or knowledge stores
-- Know about file formats, encoding pipelines, or data ingestion
-- Impose a feature space or feature encoding
-- Own any pipeline or execution logic
-- Import any external system
+**What Centrix owns:**
+- Canonical `Signal` and `Prototype` types
+- Complete algebra over `SparseVector`
+- Trace and observability types
+- Action vocabulary for the learning system
+- Field dynamics: propagation, decay, stabilisation, attention
 
-Centrix does:
-- Define the canonical Signal and Prototype types that reasoning systems use
-- Provide a complete, correct algebra over sparse vectors
-- Define the trace and observability types
-- Define the action vocabulary that the learning system acts on
-- Implement field dynamics: propagation, decay, stabilisation, attention
+**What Centrix does not own:**
+- Nodes, flows, engines, knowledge stores
+- File formats, encoding pipelines, data ingestion
+- Feature encoding or feature space assignment
+- Pipeline execution or routing logic
+- Any import from the caller's ecosystem
+
+```
+Module:  github.com/leraniode/xgo/centrix   (experimental)
+Future:  github.com/leraniode/centrix        (standalone, stable)
+Deps:    none
+```
+
+Centrix imports nothing outside the Go standard library.
 
 ---
 
 ## 2. The Mental Model
 
-Think of Centrix as the physics of the system.
+Centrix is the **physics** of a reasoning system.
 
-Just as physics defines mass, energy, force, and motion — and everything built in
-the physical world operates according to those laws — Centrix defines Signal,
-SparseVector, Confidence, and Trace. Every system that reasons or generates using
-Centrix operates according to Centrix's algebra.
+| Concept | Physics analogy |
+|---------|-----------------|
+| `SparseVector` | Matter — the substance a signal is made of |
+| `Confidence` | Assertion strength — how strongly the signal asserts itself |
+| `Trace` | History — the ordered record of what happened |
+| `Prototype` | Memory — authored knowledge that persists between runs |
+| `Algebra` | Transformations — how vectors change |
+| `Field` | Mechanics — how signals interact when they share space |
 
-The analogy holds further:
-- SparseVector is matter — the substance a signal is made of
-- Confidence is energy — how strongly the signal asserts itself
-- Trace is history — the record of what happened to the signal
-- Field dynamics are mechanics — how signals interact when they share space
-- Algebra operations are transformations — how signals change
-- Prototype is memory — authored or learned knowledge that persists between runs
-
-A signal does not know what built it or what will consume it. It is just a
-mathematical object moving through a system that obeys Centrix's rules.
+A signal does not know what built it or what will consume it. It is a
+mathematical object moving through a system that obeys Centrix's laws.
 
 ---
 
-## 3. Core Primitives
+## 3. Types
+
+All types are in package `core`. All are value types — no pointers in the public API.
 
 ### 3.1 FeatureIndex
 
@@ -76,9 +79,11 @@ mathematical object moving through a system that obeys Centrix's rules.
 type FeatureIndex = uint32
 ```
 
-A key in a SparseVector. Centrix does not define what a FeatureIndex means —
-that is the caller's responsibility. A FeatureIndex is just an unsigned integer
-that identifies a dimension in the feature space.
+A key in a `SparseVector`. Represents one dimension of concept space. Centrix
+does not assign or interpret `FeatureIndex` values — that is the caller's
+responsibility. The invariant: **a `FeatureIndex` always represents the same
+concept**, across all signals, prototypes, and runs. If this breaks, similarity
+math becomes meaningless.
 
 ### 3.2 SparseVector
 
@@ -86,64 +91,52 @@ that identifies a dimension in the feature space.
 type SparseVector map[FeatureIndex]float64
 ```
 
-The feature representation of a signal. Only non-zero features are stored.
-This is the sparsity principle: absence is meaningful, and storing zeros wastes
-space and time.
+A sparse point in concept space. Only non-zero features are stored — absence is
+meaningful. Operations run in `O(k)` where `k` is active features, not `O(D)`
+where `D` is the dimension space size. Typical usage: 10–30 active features in
+a space of 10,000+ dimensions.
 
-Operations over two SparseVectors run in O(k) where k is the number of active
-features, not the size of the feature space. This is what makes Centrix viable
-on constrained hardware.
+Zero weights must never be stored. Feature presence must be intentional.
 
-All weights are float64. This is non-negotiable in v0.1 — revisit only if
-profiling on constrained hardware shows a measurable impact.
-
-### 3.3 Prototype
-
-```go
-// Prototype is persistent knowledge — a SparseVector that survives between runs.
-// Where a Signal is ephemeral (created at run start, discarded at run end),
-// a Prototype is authored or learned knowledge that lives in the knowledge layer.
-// Weight reflects how trusted or reliable this prototype is.
-type Prototype struct {
-    Vector SparseVector
-    Weight float64
-}
-```
-
-The fundamental distinction: Signals are runtime objects. Prototypes are
-persistent objects. A Signal wraps a SparseVector with Confidence and Trace.
-A Prototype wraps a SparseVector with Weight. They are never the same thing.
-
-Only derived knowledge — Prototypes — persists between runs. Signals do not.
-
-### 3.4 Action
-
-A typed constant representing what was done to a signal at a step.
-The learning system uses Action to decide how to update weights and trust.
+### 3.3 Action
 
 ```go
 type Action int
 
 const (
-    Generated  Action = iota // new features produced absent in the input signal
-    Matched                  // signal compared against a prototype and scored
-    Propagated               // energy spread through a field based on similarity
-    Attenuated               // signal weights reduced by decay
-    Composed                 // two signals merged into a higher-level signal
-    Filtered                 // weak features removed below a threshold
+    Generated  Action = iota
+    Matched
+    Propagated
+    Attenuated
+    Composed
+    Filtered
 )
 ```
 
-Action is Centrix-defined because each constant corresponds directly to a
-Centrix operation. Callers map their own execution events onto these constants.
+Records what Tier 2 operation was applied at a `Step`. The learning system uses
+`Action` to decide how to update weights and trust after a run. These six
+constants map directly to the six Tier 2 operations.
 
-Note: callers (such as execution engines) may define their own effect vocabulary
-for execution-level events (tool calls, output emission, etc.). Those are not
-Centrix Actions — they are a separate type defined by the caller.
+Callers that build execution engines may define their own effect vocabulary
+(tool calls, output emission, etc.) as separate types — those are not `Action`.
+
+### 3.4 ComposeMode
+
+```go
+type ComposeMode int
+
+const (
+    Independent ComposeMode = iota // OR-combination: 1 − (1−cA)(1−cB)
+    Correlated                     // Max: max(cA, cB)
+)
+```
+
+Tells `Compose` how to combine confidence from two signals. The caller must
+supply this — Centrix cannot infer whether two convergent paths represent
+independent evidence or correlated evidence. The caller built the flow; they know.
+Passing the wrong mode silently corrupts the learning signal downstream.
 
 ### 3.5 Step
-
-One entry in a Signal's execution history.
 
 ```go
 type Step struct {
@@ -155,36 +148,27 @@ type Step struct {
 }
 ```
 
-Node is the identifier of what produced this step — Centrix does not define what
-a node is, only that it has a string identity. Action records the operation that
-was applied. Value is an optional payload. The confidence delta records exactly
-how this step changed the signal's certainty.
+One entry in a Signal's execution history. `Node` is the string identity of what
+produced this step — required for confidence gate condition 2. `Value` is an
+optional payload defined by the caller. When `ConfidenceBefore == ConfidenceAfter`,
+the confidence gate was not satisfied — the update was blocked, not zero-delta.
 
 ### 3.6 Trace
 
 ```go
-type Trace []Step
+type Trace struct { /* unexported */ }
 ```
 
-The ordered log of every Step a Signal has accumulated since it was created.
+The ordered execution history of a Signal.
 
 Rules:
 - Append-only during execution
 - Capped at 64 steps — sliding window, oldest dropped first
-- The most recent Step is never dropped
-- On Compose: both Traces are merged (a first, then b), then the Compose Step
-  is appended. The merged Trace is then capped. The Compose Step is always last
-  and is never the one dropped.
-- No mutex on Trace — a Signal is owned by one goroutine at a time.
-  Concurrent access to a single Signal is a caller error, not a race to protect.
-
-Cap reasoning: reasoning chains rarely exceed 10–20 steps. Cap of 64 covers
-99% of expected usage while bounding memory at ~2KB per Signal trace.
-Caller can override cap if required.
+- The most recently appended step is **never** dropped
+- No mutex — a Signal has single goroutine ownership; concurrent access is a caller error
+- On `Compose`: a's history, then b's history, then the Compose step. Compose step is always last.
 
 ### 3.7 Signal
-
-The canonical runtime object. Everything in Centrix operates on or produces Signals.
 
 ```go
 type Signal struct {
@@ -194,468 +178,396 @@ type Signal struct {
 }
 ```
 
-**A Signal is a value, not an identity.**
-Not a persistent object that survives transformations — a value that is created,
-transformed, and consumed. Every Tier 2 operation takes a Signal and returns a
-new Signal. The input is unchanged. Return type is `Signal`, not `*Signal`.
-No pointer — no shared mutable state.
+The canonical runtime object.
 
-**A Signal is a runtime object.**
-It does not exist before a flow run starts and does not survive after it ends.
-Prototypes persist as authored or learned knowledge between runs. The Signal
-wrapping (Confidence + Trace) is constructed fresh at the start of each run.
-Confidence begins at a caller-supplied initial value, never inherited from
-a prior run.
+**Value, not identity.** Every Tier 2 operation returns a new `Signal`. Inputs
+are never mutated. Return type is `Signal`, not `*Signal`.
 
-**A Signal is evolving state, not a message.**
-One Signal per execution thread. A node receives the current Signal — the
-accumulated state of all reasoning so far — transforms it, and returns the
-next state. The Signal grows richer as it moves through nodes. Nodes are
-transformations; the Signal is what is being transformed.
+**Ephemeral.** A Signal does not exist before a run starts and does not survive
+after it ends. Only Prototypes persist between runs.
 
-**The Trace belongs to the Signal.**
-A node can inspect the full history of how the Signal it receives was built —
-observability from inside the reasoning process, not just from outside.
+**Evolving state.** One Signal per execution thread. It accumulates the full
+reasoning history in its Trace. Nodes are transformations; the Signal is what
+is being transformed.
 
-**`Next` does not belong on Signal.**
-Routing concerns (which node to visit next) are the caller's responsibility.
-A `Next` field on Signal would give Signal knowledge of graph structure —
-a direct violation of Centrix's boundary. Callers handle routing externally.
+**Energy is derived.** `Energy(signal.Vector)` is always the activation
+strength — never a stored field (Invariant 10).
+
+### 3.8 Prototype
+
+```go
+type Prototype struct {
+    Vector SparseVector
+    Weight float64 // [0.0, 1.0] — higher = more trusted
+}
+```
+
+Persistent knowledge. Where a Signal is ephemeral (born and discarded each run),
+a Prototype is authored or learned knowledge that lives in the knowledge layer.
+It is never modified during a run.
+
+| | Signal | Prototype |
+|--|--------|-----------|
+| Lifetime | One run | Persistent |
+| Carries | Vector + Confidence + Trace | Vector + Weight |
+| Purpose | Evolving reasoning state | Stored knowledge |
+| Modified during run | Yes, via Tier 2 ops | No |
 
 ---
 
 ## 4. Signal Lifecycle
 
 ```
-Construction   →   Node transforms   →   Composition (optional)   →   Discard
-(run start)         (per node)             (paths merging)            (run end)
+Construct → Transform (nodes) → Compose (if paths merge) → Return → Discard
 ```
 
-A Signal is born once per run. It passes through nodes sequentially — each node
-receives it and returns a transformed version. If parallel execution paths
-converge, their Signals are Composed into one before continuing. At run end,
-the final Signal is returned to the caller as the result. After that, it is
-discarded — it does not re-enter the system.
+A Signal is born once per run at a caller-supplied initial confidence. It passes
+through nodes sequentially — each transforms it and returns the next state. If
+parallel execution paths converge, their Signals are `Compose`d before continuing.
+The final Signal is returned to the caller. After that, it is discarded — it does
+not re-enter the system.
 
-The SparseVector inside it may inform the construction of future Prototypes
-(through the learning system), but the Signal itself — with its Confidence
-and Trace — does not carry forward.
+The SparseVector inside may inform construction of future Prototypes through the
+learning system, but the Signal itself — with its Confidence and Trace — does not
+carry forward.
 
 ---
 
-## 5. The Two-Tier Algebra
+## 5. Algebra — Tier 1
 
-Centrix operations fall into two distinct tiers. This distinction is fundamental.
+Package: `core`. These operate on `SparseVector` directly. No Trace written. No
+Confidence changed. Pure mathematics.
 
-### Tier 1 — SparseVector Operations (Pure Math)
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `Energy` | `(v SparseVector) float64` | Σ\|wᵢ\| — activation strength (L1 norm) |
+| `Dot` | `(a, b SparseVector) float64` | Σ aᵢbᵢ — magnitude-sensitive similarity |
+| `Cosine` | `(a, b SparseVector) float64` | (a·b)/(‖a‖‖b‖) — direction-sensitive, [-1,1] |
+| `Jaccard` | `(a, b SparseVector) float64` | \|a∩b\|/\|a∪b\| — binary set overlap, [0,1] |
+| `Merge` | `(a, b SparseVector) SparseVector` | Union; shared features sum weights |
+| `Normalize` | `(v SparseVector) SparseVector` | Scale to unit L2 norm |
+| `Filter` | `(v SparseVector, θ float64) SparseVector` | Remove features below threshold |
 
-These operate on SparseVector directly. No Trace is written. No Confidence
-is changed. These are pure mathematical transformations.
+**Similarity choice:**
 
-| Operation | Description |
-|-----------|-------------|
-| `Dot(a, b)` | Σ aᵢ × bᵢ — raw directional similarity, magnitude-sensitive |
-| `Cosine(a, b)` | (a · b) / (‖a‖ × ‖b‖) — normalised similarity, range [-1, 1] |
-| `Jaccard(a, b)` | \|a ∩ b\| / \|a ∪ b\| — binary set overlap (presence only, v0.1) |
-| `Merge(a, b)` | Union of features; shared features sum their weights |
-| `Normalize(v)` | Scale to unit L2 norm |
-| `Filter(v, θ)` | Remove features below threshold θ |
-| `Energy(v)` | Σ \|wᵢ\| — sum of absolute weights; activation strength of a vector |
-
-**Operation-to-similarity mapping (from R1):**
 ```
-Generate:    Cosine — prototype matching must prioritise angular alignment.
-             High-energy misaligned prototype must not dominate.
-Attention:   Dot   — magnitude influence required. High-energy signals
-             should propagate more aggressively.
-Propagation: Dot   — same reasoning as Attention.
+Generate    → Cosine   angular alignment; high-energy misaligned proto must not dominate
+Attention   → Dot      magnitude matters; high-energy signals should surface first
+Propagation → Dot      same reasoning as Attention
 ```
 
-`Energy` is always derived from the Vector — never a separate stored field.
-Invariant 10 holds by construction: one source of truth for activation strength.
+`Energy` is always derived — never stored. Invariant 10 holds by construction.
 
-Use Tier 1 operations when you need fast similarity lookups, feature manipulation,
-or preparation work before constructing a full Signal.
+`Cosine` returns `0.0` when either vector has zero L2 norm. Never returns NaN.
 
-### Tier 2 — Signal Operations (Stateful Transformations)
+`Jaccard` is binary (presence-only) in v0.1. Weights are read but ignored. A
+feature is either present or absent.
 
-These operate on the full Signal. They produce a new Signal with an updated
-Confidence and a new Step appended to the Trace.
+`Filter` uses absolute weight comparison: a feature with weight `-0.5` passes a
+threshold of `0.3` because `|-0.5| = 0.5 ≥ 0.3`.
 
-| Operation | Action Appended | Confidence Update |
-|-----------|----------------|-------------------|
-| `Generate(s, proto, θ)` | Generated | Updated if conditions met |
-| `Compose(a, b, mode)` | Composed | Updated if conditions met |
-| `Propagate(s, field, α)` | Propagated | Updated if conditions met |
-| `Attenuate(s, λ)` | Attenuated | Reduced by decay factor |
-| `FilterSignal(s, θ)` | Filtered | Unchanged |
+---
 
-Tier 2 operations are what reasoning nodes call. Every call is auditable.
+## 6. Signal Operations — Tier 2
 
-### ComposeMode
+Package: `core`. These operate on the full Signal. Each returns a new Signal with
+an updated Confidence and a new Step appended. Inputs are never mutated.
 
-Compose requires the caller to specify whether the two signals are independent
-or correlated. The caller knows — Centrix cannot infer it.
+The `node` parameter is the string identity of the caller. It is required for
+Step attribution and for confidence gate condition 2. An empty `node` disables
+the confidence update for that call — the Step is still appended.
+
+### Generate
 
 ```go
-type ComposeMode int
-
-const (
-    Independent ComposeMode = iota // OR-combination: 1 − ∏ₖ(1 − cₖ)
-    Correlated                     // Max: take the higher confidence
-)
+func Generate(s Signal, proto Prototype, θ float64, node string) Signal
 ```
 
-If `Cosine(a.Vector, b.Vector) > 0.5`, the signals are correlated.
-Threshold of 0.5 is the default (from R3). Configurable in v0.2 if needed.
-
----
-
-## 6. Confidence Update Rule
-
-Confidence updates when all of the following conditions are satisfied:
-
-1. **Signal is known** — the Signal's Vector has active features (non-empty)
-2. **Step is known** — the Action is defined and the Node identity is non-empty
-3. **Knowledge satisfies it** — match score against a Prototype exceeds minimum
-   quality threshold: `matchScore > 0.15`
-4. **Action produced good results** — Prototype weight exceeds minimum trust
-   threshold: `protoWeight > 0.30`
-
-Threshold derivation (from R4): baseline cosine for two random sparse vectors
-(k=10, D=10,000) is `√(k/D) ≈ 0.03`. Meaningful match = 5× above baseline = 0.15.
-
-When all four conditions are met, confidence updates as:
+Produces features present in `proto` but absent in `s`, scaled by
+`Cosine(s.Vector, proto.Vector)`:
 
 ```
-confidence_new = confidence_old + α × (matchScore × protoWeight − confidence_old)
+for f in proto.Vector:
+    if f not in s.Vector and |proto.Vector[f]| > θ:
+        out[f] = proto.Vector[f] × Cosine(s.Vector, proto.Vector)
 ```
 
-Where `α = 0.10` (conservative update rate, from R4).
+If Cosine ≤ 0 (opposite or orthogonal), no features are generated. Direction
+defines semantic fit — a misaligned prototype produces nothing.
 
-This is a bounded update — confidence moves toward `matchScore × protoWeight`
-but never overshoots it in a single step. Confidence is always bounded to [0.0, 1.0].
-
-When conditions are not fully met, confidence is unchanged. The Step is still
-appended — ConfidenceBefore == ConfidenceAfter is itself information for the
-learning system: it distinguishes "confidence was gated" from "confidence moved."
-
-**Validated constants (from R4):**
-```
-minMatchScore    = 0.15
-minProtoWeight   = 0.30
-α_confidence     = 0.10
-```
-
----
-
-## 7. Generation
-
-Generation is what makes Centrix generative. The operation:
+### Compose
 
 ```go
-Generate(query Signal, prototype Prototype, θ float64) Signal
+func Compose(a, b Signal, mode ComposeMode, node string) Signal
 ```
 
-Produces features present in the Prototype's Vector but absent in the query's
-Vector, scaled by the Cosine similarity between query and prototype:
+Merges two Signals. Vector is `Merge(a.Vector, b.Vector)`. Confidence is
+combined per `mode`. Trace is a's history + b's history + Compose step.
+
+### Attenuate
+
+```go
+func Attenuate(s Signal, λ float64, node string) Signal
+```
+
+Decays all feature weights by factor `λ`: `w_new = w_old × (1 − λ)`. λ is
+clamped to [0, 1]. Features that reach zero are removed. Confidence is
+unchanged — decay is structural, not a knowledge event.
+
+### FilterSignal
+
+```go
+func FilterSignal(s Signal, θ float64, node string) Signal
+```
+
+Removes features whose absolute weight falls below `θ`. Delegates to Tier 1
+`Filter`. Confidence is unchanged.
+
+### Propagate
+
+```go
+func Propagate(s Signal, proto Prototype, α float64, node string) Signal
+```
+
+Signal-level propagation — one Signal absorbs energy from one Prototype,
+weighted by `Dot(s.Vector, proto.Vector)`:
 
 ```
-gen(q, p) = { (f, wᵖ[f] × Cosine(q.Vector, p.Vector)) | f ∈ p, f ∉ q, wᵖ[f] > θ }
+for f in proto.Vector:
+    out[f] += α × Dot(s.Vector, proto.Vector) × proto.Vector[f]
 ```
 
-The output contains features that were not in the input. This is deterministic
-generation: the output space is bounded by the Prototype, the output is scaled
-by match quality, and nothing is invented — only inferred from the match.
+If Dot ≤ 0, no energy is transferred. Full field-level propagation (multiple
+signals interacting) is in package `field`.
 
-Cosine is used here (not Dot) because prototype matching must prioritise angular
-alignment over raw energy. A high-energy misaligned Prototype must not dominate
-generation — direction defines semantic fit.
+---
 
-**Generation chain:** The output of Generate becomes input to the next Generate
-call. Each step enriches the signal with features the previous step could not
-have produced. Each chain step is traceable, each Action is appended, and
-confidence updates according to the rule at each step.
+## 7. Confidence
+
+Confidence behaves like belief: bounded to `[0.0, 1.0]`, gated, never inflated
+by correlated evidence.
+
+### Gate conditions
+
+All four must hold for confidence to update:
+
+1. `signal.Vector` is non-empty
+2. `node` is non-empty
+3. `matchScore > 0.15`
+4. `protoWeight > 0.30`
+
+Thresholds are grounded in sparse vector math: baseline cosine for two random
+sparse vectors (k=10, D=10,000) is `√(k/D) ≈ 0.032`. The match threshold is
+~5× this baseline.
+
+### Update formula
+
+```
+confidence_new = confidence_old + 0.10 × (matchScore × protoWeight − confidence_old)
+```
+
+This is Rescorla-Wagner: belief moves toward the target proportionally to
+prediction error. It never overshoots in a single step.
+
+### Compose confidence
+
+```
+Independent → 1 − (1 − cA)(1 − cB)   two weak signals can produce strong confidence
+Correlated  → max(cA, cB)             the same evidence processed twice is not doubled
+```
 
 ---
 
 ## 8. Field Dynamics
 
-A SignalField is a collection of Signals that interact. Field dynamics are how
-Centrix implements associative reasoning — signals that share features amplify
-each other; signals that share nothing do not interact.
+Package: `field`. A `SignalField` is a collection of Signals that interact.
+Field dynamics implement associative reasoning — signals sharing concept
+dimensions amplify each other.
 
-### Propagation
+### SignalField
 
-Energy spreads through the field. Each signal's weights increase based on
-similarity to its neighbours. Dot product is used — magnitude influence is
-required here; high-energy signals should propagate more aggressively.
+```go
+type SignalField struct {
+    Signals  []core.Signal
+    Alpha    float64 // propagation coefficient (default: 0.1)
+    Lambda   float64 // decay rate (default: 0.3)
+    Epsilon  float64 // convergence threshold (default: 1e-4)
+    MaxTicks int     // hard stop (default: 50)
+}
+
+func New(signals []core.Signal) SignalField
+```
+
+`New` emits a warning to stderr when `len(signals) > 15` with default parameters
+(stability not validated beyond this bound). Not a panic — the caller decides.
+
+All field operations return a new `SignalField`. Inputs are not mutated.
+
+### Propagate
+
+```go
+func Propagate(f SignalField) SignalField
+```
+
+One tick of energy spreading. For each signal `i`, every other signal `j`
+contributes proportional to `Dot(sᵢ, sⱼ)`:
 
 ```
-wᵢ(t+1) = wᵢ(t) + α × Σⱼ Dot(sᵢ.Vector, sⱼ.Vector) × wⱼ(t)   for j ≠ i
+vector_i_new[f] += α × Dot(sᵢ, sⱼ) × sⱼ[f]   for all j ≠ i
 ```
 
-Where `α = 0.1` (propagation coefficient, from R2).
+**Snapshot semantics:** all Dot products are computed from the pre-tick state.
+Signal i does not see signal j's updated vector within the same tick. This
+makes propagation order-independent and deterministic (Invariant 1).
 
 ### Decay
 
-Weights reduce by factor λ per tick to prevent runaway energy:
-
-```
-wᵢ(t+1) = wᵢ(t) × (1 − λ)
+```go
+func Decay(f SignalField) SignalField
 ```
 
-Where `λ = 0.3` (decay rate, from R2).
+Applies `w_new = w_old × (1 − λ)` to all features across all signals.
+Features that reach zero are removed (Invariant 3).
 
-### Stabilisation
+### Stabilize
 
-Propagation and decay run until the total field energy delta falls below
-convergence threshold ε, or a maximum tick count is reached.
+```go
+func Stabilize(f SignalField) StabilizeResult
 
-Where `ε = 1e-4` (from R2). Settles in < 50 iterations under normal conditions.
-
-### Stability Condition
-
-For the field to converge, the following must hold:
-
+type StabilizeResult struct {
+    Field      SignalField
+    Ticks      int
+    Converged  bool
+    FinalDelta float64
+}
 ```
-λ > α × (N − 1) × μ
-```
 
-Where:
-- λ = decay factor
-- α = propagation coefficient
-- N = number of signals in the field
-- μ = mean cosine similarity between signals
+Alternates `Propagate → Decay` per tick until total field energy delta falls
+below `ε`, or `MaxTicks` is reached. `StabilizeResult` reports which exit
+condition was hit.
 
-**Validated defaults** (α=0.1, λ=0.3) satisfy this condition for N ≤ 15
-with moderate feature overlap (from R2).
+**Stability condition:** `λ > α × (N − 1) × μ`
 
-When N > 15, callers must either increase λ, decrease α, or ensure the signal
-population is sparse enough that μ is low. Centrix emits a warning (not a panic)
-when N exceeds 15 with default parameters. The maximum tick count acts as a
-hard stop regardless of convergence.
-
-Behaviour for N > 15 or high-overlap feature spaces is uncharacterised in v0.1.
-Document the constraint in field.go. Revisit in v0.2 with profiling data.
+Default values (α=0.1, λ=0.3) satisfy this for N ≤ 15 at μ=0.05 (realistic
+sparse overlap). The condition is verified at 4.3× margin.
 
 ### Attention
 
-Selects the top-K signals from a field ranked by `Dot(query, sᵢ) × Energy(sᵢ)`.
-Dot product used — magnitude-scaled ranking is correct here; high-energy signals
-that align with the query should surface first.
+```go
+func Attention(f SignalField, query core.Signal, k int) []core.Signal
+```
 
-This is how a field narrows to the most relevant signals before Prototype matching.
+Returns the top-`k` signals ranked by `Dot(query, sᵢ) × Energy(sᵢ)`.
+Signals with score ≤ 0 are excluded. Results are sorted descending.
+If `k > len(qualifying)`, all qualifying signals are returned.
 
 ---
 
-## 9. Package Structure
+## 9. Registry
 
-```
-centrix/
-  core/
-    types.go        — FeatureIndex, SparseVector, Prototype, Action,
-                      Step, Trace, Signal, ComposeMode
-    algebra.go      — Tier 1: Dot, Cosine, Jaccard, Merge, Normalize,
-                      Filter, Energy
-    signal_ops.go   — Tier 2: Generate, Compose, Attenuate, FilterSignal,
-                      Propagate (signal-level)
-  field/
-    field.go        — SignalField, Propagate, Decay, Stabilize, Attention
-  registry/
-    registry.go     — concept name → FeatureIndex mapping
-                      append-only, stable, deterministic
-```
-
-No other packages. No CLI. No knowledge layer. No pipeline. No imports from
-any system built on Centrix.
-
----
-
-## 10. Feature Space Design
-
-The feature space is what gives SparseVector weights semantic meaning. Without
-a well-defined feature space, similarity math is syntactically correct but
-semantically meaningless.
-
-### What a feature represents
-
-A feature represents a **concept dimension** in a semantic space. Not a token,
-not a word, not a surface form — a concept. Two tokens that mean the same thing
-should map to the same FeatureIndex. Feature 1201 represents `physics.gravity`,
-not the string "gravity."
-
-This is what makes Cosine similarity semantically meaningful: two signals share
-a feature only if they share the same concept, not merely similar-sounding words.
-
-### The feature space is global
-
-A single uint32 space spans the entire system. FeatureIndex 1201 means
-`physics.gravity` in every Signal, every Prototype, every run. Cross-domain
-similarity is real — signals from different domains can share features if the
-underlying concepts genuinely overlap.
-
-Callers use ID range conventions to avoid accidental collisions between domains.
-Centrix documents the pattern but does not enforce it.
-
-### The feature space is static in v0.1
-
-The complete set of features is defined before any Signal is created. No new
-FeatureIndexes are introduced at runtime. This preserves Invariant 1
-(Deterministic Execution) by construction.
-
-Dynamic feature discovery is deferred to v0.2, tied to the learning system.
-
-### Feature semantic consistency (Invariant)
-
-**A FeatureIndex must always represent the same concept — across signals,
-across prototypes, across runs.** If this rule breaks, similarity math becomes
-meaningless. This is the most fundamental correctness requirement in the system.
-
-### SparseVector integrity
-
-- Dimension space: 10,000+ possible FeatureIndexes
-- Active features per vector: 10–30 in typical use
-- Zero weights are never stored — absence is meaningful
-- Feature presence must be intentional — a feature appears because the concept
-  it represents genuinely contributes to the signal's meaning
-
-### The Registry
-
-The Registry maps concept names to stable uint32 FeatureIndexes:
+Package: `registry`. Maps concept names to stable `FeatureIndex` values.
 
 ```go
-registry.ID("physics.gravity") // → 1201
+func New() *Registry
+func NewFrom(entries map[string]FeatureIndex) (*Registry, error)
+
+func (r *Registry) ID(name string) FeatureIndex     // register or retrieve
+func (r *Registry) Name(id FeatureIndex) (string, bool)
+func (r *Registry) Has(name string) bool
+func (r *Registry) Len() int
+func (r *Registry) Snapshot() map[string]FeatureIndex
+func (r *Registry) Names() []string
+func (r *Registry) IDs() []FeatureIndex
+func (r *Registry) Merge(other *Registry) (*Registry, error)
 ```
 
-Rules: append-only, stable, deterministic. A name always maps to the same ID.
-IDs are never reassigned. Callers are not required to use the Registry — it is
-infrastructure that makes stable feature space authoring tractable.
+Rules:
+- A name always maps to the same ID — across runs, across systems
+- IDs are never reassigned
+- The mapping is append-only — existing entries are immutable
+- `ID("")` panics — empty name is a caller error, not a runtime condition
+- `FeatureIndex(0)` is reserved — never assigned
+- IDs are assigned sequentially from 1
 
-The Registry lives in `centrix/registry`. It has no dependency on core algebra.
-It is used by authoring pipelines, not by Centrix's runtime operations.
+`NewFrom` validates that IDs are contiguous from 1, no duplicates, no zeros.
+Returns an error otherwise.
+
+`Merge` checks for conflicts (same name, different ID) and returns an error.
+New names from `other` are assigned IDs after the receiver's maximum, sorted
+alphabetically for determinism.
+
+The Registry is safe for concurrent reads and writes. `ID` uses a double-checked
+locking pattern — read lock for fast path, write lock only when registering new.
 
 ---
 
-## 11. The Authoring Model
+## 10. Authoring Model
 
-The static feature space constraint implies an offline authoring step.
+Building on Centrix involves two distinct phases.
 
-### Two phases
+### Authoring (offline, before deployment)
 
-**AUTHORING (offline, before deployment)**
 1. Define all concept dimensions your system will reason about
-2. Register them: `registry.ID("concept.name")` → stable FeatureIndex
+2. Register them via the Registry: `registry.ID("concept.name")` → stable FeatureIndex
 3. Build Prototypes: assign SparseVectors and weights for each knowledge unit
 4. Encode Prototypes into `.pack` files via the caller's encoding pipeline
-5. These `.pack` files are shipped with the system
+5. Ship `.pack` files with the system
 
-**RUNTIME (online, during execution)**
+### Runtime (online, during execution)
+
 1. Load `.pack` files into the knowledge layer
 2. Encode incoming input as a SparseVector using the same feature space
 3. Run Signal through the reasoning pipeline
 4. Signal is discarded at run end. Prototypes are unchanged.
 
-No new FeatureIndexes are introduced at runtime. No new concepts emerge during
-execution. The feature space is closed at authoring time.
+No new FeatureIndexes are introduced at runtime. The feature space is closed
+at authoring time. This is what makes Invariant 1 (Deterministic Execution)
+hold by construction.
 
-This is what makes Invariant 1 (Deterministic Execution) hold by construction.
-
-### Feature space consistency across authoring and runtime
-
-The caller is responsible for ensuring that Prototypes encoded into `.pack` files
-and Signals constructed at runtime use the same Registry and the same feature
-space. The Registry is the mechanism that makes this tractable — both the
-authoring pipeline and the runtime input encoder use the same Registry, so
-concept names map to the same FeatureIndexes on both sides.
+Both the authoring pipeline and the runtime encoder must use the same Registry —
+concept names must map to the same FeatureIndexes on both sides.
 
 ---
 
-## 12. System Invariants
+## 11. Invariants
 
-These are the non-negotiable guarantees every Centrix implementation must uphold.
-Violating any of these breaks correctness in ways the algebra cannot recover from.
+These are non-negotiable. Violating any one breaks correctness in ways the
+algebra cannot recover from.
 
-**1. Deterministic Execution**
+**1 — Deterministic Execution**
 Same input signals + same Prototypes + same feature space + same constants =
-same output, every run. Requires: static feature space, stable FeatureIndex
-mapping, no concurrent signal mutation, no randomness.
+same output, every run.
 
-**2. Feature Semantic Consistency**
+**2 — Feature Semantic Consistency**
 A FeatureIndex always represents the same concept across all signals, prototypes,
 and runs. This is the precondition for similarity math to be meaningful.
 
-**3. Sparse Vector Integrity**
-Zero weights are never stored. Feature presence is intentional. Vectors represent
-semantic mixtures of concepts, not arbitrary numerical arrays.
+**3 — Sparse Vector Integrity**
+Zero weights are never stored. Feature presence is intentional.
 
-**4. Signal Isolation**
-One goroutine owns one Signal. Signals are not shared or mutated concurrently.
-Parallelism happens between Signals (different execution threads), not within one.
-This eliminates race conditions and nondeterministic traces.
+**4 — Signal Isolation**
+One goroutine owns one Signal. Signals are never shared or mutated concurrently.
+Parallelism happens between Signals — not within one.
 
-**5. Trace Completeness**
+**5 — Trace Completeness**
 Every Tier 2 transformation appends a Step. No transformation is silent.
-The Trace is the audit log — always available, always accurate, always ordered.
-Bounded at 64 steps (sliding window). The most recent Step is never dropped.
+Bounded at 64 steps. Most recent Step is never dropped.
 
-**6. Energy Stability**
-Field propagation must converge. The stability condition must hold:
+**6 — Energy Stability**
 `λ > α × (N − 1) × μ`. Default values (α=0.1, λ=0.3) satisfy this for N ≤ 15.
-Callers are warned when N exceeds this. Maximum tick count acts as hard stop.
+`MaxTicks` acts as a hard stop regardless of convergence.
 
-**7. Confidence Integrity**
-Confidence behaves like belief, not energy. Bounded to [0.0, 1.0]. Gated —
-updates only when match quality and prototype weight satisfy their thresholds.
-Not inflated by correlated evidence (Compose uses Max when correlated,
-OR-combination when independent).
+**7 — Confidence Integrity**
+Bounded to [0.0, 1.0]. Gated. Not inflated by correlated evidence.
 
-**8. Signal Lifecycle**
-Signals are ephemeral. Created at run start, evolved through the reasoning
-pipeline, discarded at run end. Signals never cross run boundaries.
-Only Prototypes persist.
+**8 — Signal Lifecycle**
+Signals are ephemeral. Created at run start, discarded at run end. Never cross
+run boundaries. Only Prototypes persist.
 
-**9. Memory Boundary**
-Persistent knowledge is represented as Prototypes `{ Vector, Weight }`.
-Signals cannot persist. This prevents reasoning state from contaminating
-future runs — each run starts from clean, authored knowledge.
+**9 — Memory Boundary**
+Persistent knowledge is `Prototype { Vector, Weight }`. Signals cannot persist.
+Each run starts from clean authored knowledge.
 
-**10. Energy is Derived**
-A Signal's energy is always `Energy(signal.Vector)` — the sum of absolute
-weights. Energy is never a separate stored field. One source of truth
-for activation strength: the Vector itself.
-
----
-
-## 13. Example Concept Graph
-
-This shows how a caller might organise the layers from authoring through to
-execution. This is not Centrix's responsibility — it is an illustration of how
-the pieces connect for a caller building a full reasoning pipeline on Centrix.
-
-```
-KnowledgePack (caller)
-      ↓
-Feature Registry  ←  concept name → FeatureIndex mapping
-      ↓
-Feature Space     ←  the set of all valid FeatureIndexes and their meanings
-      ↓
-SparseVectors     ←  semantic composition over the feature space
-      ↓
-Prototypes        ←  SparseVector + Weight (persistent knowledge)
-      ↓
-Signals           ←  SparseVector + Confidence + Trace (runtime objects)
-      ↓
-Tier 2 Operations ←  Signal → Signal transformations (caller's nodes)
-      ↓
-Field Dynamics    ←  propagation, decay, stabilisation, attention
-      ↓
-Prototype Matching←  Cosine similarity between signal and Prototypes
-      ↓
-Compose           ←  merging reasoning paths
-      ↓
-Output Signal     ←  the result of the reasoning run
-```
-
-KnowledgePack authoring and node execution are the caller's responsibility.
-Everything from Feature Registry to Output Signal is Centrix's domain.
+**10 — Energy is Derived**
+A Signal's energy is always `Energy(signal.Vector)`. Never a stored field.
+One source of truth for activation strength.
