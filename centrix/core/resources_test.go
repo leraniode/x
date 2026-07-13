@@ -50,46 +50,60 @@ func BenchmarkDot_k20_D1000000(b *testing.B) {
 func BenchmarkDot_k10_D10000(b *testing.B) {
 	a, bv := makeSparse(10, 10_000, 0.5), makeSparse(10, 10_000, 0.5)
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ { core.Dot(a, bv) }
+	for i := 0; i < b.N; i++ {
+		core.Dot(a, bv)
+	}
 }
 
 func BenchmarkDot_k50_D10000(b *testing.B) {
 	a, bv := makeSparse(50, 10_000, 0.5), makeSparse(50, 10_000, 0.5)
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ { core.Dot(a, bv) }
+	for i := 0; i < b.N; i++ {
+		core.Dot(a, bv)
+	}
 }
 
 func BenchmarkDot_k200_D10000(b *testing.B) {
 	a, bv := makeSparse(200, 10_000, 0.5), makeSparse(200, 10_000, 0.5)
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ { core.Dot(a, bv) }
+	for i := 0; i < b.N; i++ {
+		core.Dot(a, bv)
+	}
 }
 
 func BenchmarkCosine_k20_D10000(b *testing.B) {
 	a, bv := makeSparse(20, 10_000, 0.5), makeSparse(20, 10_000, 0.3)
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ { core.Cosine(a, bv) }
+	for i := 0; i < b.N; i++ {
+		core.Cosine(a, bv)
+	}
 }
 
 func BenchmarkGenerate_k20_D10000(b *testing.B) {
 	s := core.NewSignalFromVector(makeSparse(20, 10_000, 0.5), 0.5)
 	proto := core.NewPrototype(makeSparse(30, 10_000, 0.6), 0.8)
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ { core.Generate(s, proto, 0.1, "bench") }
+	for i := 0; i < b.N; i++ {
+		core.Generate(s, proto, 0.1, "bench")
+	}
 }
 
 func BenchmarkPropagate_k20_D10000(b *testing.B) {
 	s := core.NewSignalFromVector(makeSparse(20, 10_000, 0.5), 0.5)
 	proto := core.NewPrototype(makeSparse(20, 10_000, 0.5), 0.8)
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ { core.Propagate(s, proto, 0.1, "bench") }
+	for i := 0; i < b.N; i++ {
+		core.Propagate(s, proto, 0.1, "bench")
+	}
 }
 
 func BenchmarkCompose_k20_D10000(b *testing.B) {
 	a := core.NewSignalFromVector(makeSparse(20, 10_000, 0.5), 0.6)
 	bv := core.NewSignalFromVector(makeSparse(20, 10_000, 0.4), 0.5)
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ { core.Compose(a, bv, core.Independent, "bench") }
+	for i := 0; i < b.N; i++ {
+		core.Compose(a, bv, core.Independent, "bench")
+	}
 }
 
 // ─── Memory bounds ────────────────────────────────────────────────────────────
@@ -206,7 +220,7 @@ func TestResourceConstraints_Summary(t *testing.T) {
 	t.Logf("Signal total  ~%d bytes (~%dKB) — k=20, full 64-step trace", total, total/1024)
 
 	// Stability condition.
-	α, λ, N, μ := 0.1, 0.3, 15, 0.05  // realistic: k=20 in D=10,000 → very sparse overlap
+	α, λ, N, μ := 0.1, 0.3, 15, 0.05 // realistic: k=20 in D=10,000 → very sparse overlap
 	rhs := α * float64(N-1) * μ
 	t.Logf("Field stable  λ=%.2f > α×(N-1)×μ = %.3f → %v (N≤15, μ=%.2f, realistic sparse)", λ, rhs, λ > rhs, μ)
 	t.Logf("───────────────────────────────────────────────────────────────────")

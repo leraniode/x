@@ -90,8 +90,9 @@ func Generate(s Signal, proto Prototype, θ float64, node string) Signal {
 // Vector: Merge(a.Vector, b.Vector) — union with weight summation on shared features.
 //
 // Confidence: determined by mode.
-//   Independent → OR-combination: 1 − (1 − cA)(1 − cB)
-//   Correlated  → Max: max(cA, cB)
+//
+//	Independent → OR-combination: 1 − (1 − cA)(1 − cB)
+//	Correlated  → Max: max(cA, cB)
 //
 // Trace: a's history followed by b's history, then the Compose Step.
 // The merged Trace is capped at DefaultTraceCap; the Compose Step is never dropped.

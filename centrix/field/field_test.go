@@ -313,8 +313,8 @@ func TestAttention_ReturnsTopK(t *testing.T) {
 	// Three signals. Query aligns with features 1 and 2.
 	// Signal with highest Dot × Energy should rank first.
 	high := sig(map[core.FeatureIndex]float64{1: 0.9, 2: 0.8}, 0.7) // strong overlap
-	mid := sig(map[core.FeatureIndex]float64{1: 0.4}, 0.5)            // partial overlap
-	low := sig(map[core.FeatureIndex]float64{3: 0.9}, 0.6)            // no overlap with query
+	mid := sig(map[core.FeatureIndex]float64{1: 0.4}, 0.5)          // partial overlap
+	low := sig(map[core.FeatureIndex]float64{3: 0.9}, 0.6)          // no overlap with query
 	f := field.New([]core.Signal{low, mid, high})
 
 	query := sig(map[core.FeatureIndex]float64{1: 1.0, 2: 1.0}, 0.0)

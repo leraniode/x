@@ -34,11 +34,11 @@ import (
 // ─── Validated constants ───────────────────────────────────────────────────────
 
 const (
-	DefaultAlpha    = 0.1    // propagation coefficient
-	DefaultLambda   = 0.3    // decay rate
-	DefaultEpsilon  = 1e-4   // convergence threshold
-	DefaultMaxTicks = 50     // hard stop on stabilisation
-	StableN         = 15     // maximum N for which defaults are validated
+	DefaultAlpha    = 0.1  // propagation coefficient
+	DefaultLambda   = 0.3  // decay rate
+	DefaultEpsilon  = 1e-4 // convergence threshold
+	DefaultMaxTicks = 50   // hard stop on stabilisation
+	StableN         = 15   // maximum N for which defaults are validated
 )
 
 // ─── SignalField ───────────────────────────────────────────────────────────────
@@ -191,9 +191,9 @@ func Decay(f SignalField) SignalField {
 
 // StabilizeResult carries the outcome of a Stabilize call.
 type StabilizeResult struct {
-	Field     SignalField
-	Ticks     int     // number of ticks executed
-	Converged bool    // true if energy delta fell below ε before MaxTicks
+	Field      SignalField
+	Ticks      int     // number of ticks executed
+	Converged  bool    // true if energy delta fell below ε before MaxTicks
 	FinalDelta float64 // last measured energy delta
 }
 

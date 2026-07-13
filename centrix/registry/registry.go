@@ -38,7 +38,7 @@ type FeatureIndex = uint32
 // Registry maps concept names to stable FeatureIndex values.
 // The zero value is not valid — use New() or NewFrom() to create a Registry.
 type Registry struct {
-	mu      sync.RWMutex
+	mu       sync.RWMutex
 	nameToID map[string]FeatureIndex
 	idToName []string // index i holds the name for FeatureIndex i+1 (IDs are 1-based)
 }
