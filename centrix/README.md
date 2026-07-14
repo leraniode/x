@@ -213,15 +213,3 @@ Measured on the actual implementation:
 - [`docs/CONCEPTS.md`](./docs/CONCEPTS.md) — full type reference, algebra spec, invariants
 - [`docs/RESEARCH.md`](./docs/RESEARCH.md) — theoretical foundations and design decisions
 
----
-
-## Graduation
-
-Centrix graduates from `xgo` to `github.com/leraniode/centrix` when:
-
-1. Full algebra proven (✅ done)
-2. Field dynamics validated (✅ done)
-3. At least one real integration with Illygen has been built and tested
-4. API is considered stable
-
-Until then, import paths and signatures may change without notice.
