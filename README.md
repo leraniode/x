@@ -4,14 +4,14 @@
     </a>
 </p>
 
-# xgo
+# X
 
 [![part of leraniode](https://raw.githubusercontent.com/leraniode/.github/main/assets/badges/partofleraniode.svg)](https://github.com/leraniode)
-[![experimental](https://raw.githubusercontent.com/leraniode/.github/main/assets/badges/experimentalleraniode.svg)](https://github.com/orgs/leraniode/repositories?q=x)
+[![experimental](https://raw.githubusercontent.com/leraniode/.github/main/assets/badges/experimentalleraniode.svg)](https://github.com/search?q=topic%3Aexperimental+org%3Aleraniode&type=Repositories)
 [![license](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
-[![CI](https://github.com/leraniode/xgo/actions/workflows/ci.yml/badge.svg)](https://github.com/leraniode/xgo/actions/workflows/ci.yml)
+[![CI](https://github.com/leraniode/x/actions/workflows/ci.yml/badge.svg)](https://github.com/leraniode/x/actions/workflows/ci.yml)
 
-> Experimental Go packages for the Leraniode ecosystem.
+> Experimental packages for the Leraniode ecosystem.
 
 Packages here are pre-stable. APIs may break between commits.
 
@@ -28,9 +28,9 @@ Sparse signal mathematics library. Defines the types, algebra, and field dynamic
 for deterministic reasoning and generation systems.
 
 ```go
-import "github.com/leraniode/xgo/centrix/core"
-import "github.com/leraniode/xgo/centrix/field"
-import "github.com/leraniode/xgo/centrix/registry"
+import "github.com/leraniode/x/centrix/core"
+import "github.com/leraniode/x/centrix/field"
+import "github.com/leraniode/x/centrix/registry"
 ```
 
 **Status:** v0.1 complete — all 5 phases built and tested.
@@ -39,6 +39,7 @@ import "github.com/leraniode/xgo/centrix/registry"
 
 ## Structure
 
+### Go packages
 Each package is an independent Go module with its own `go.mod`. To work across
 packages simultaneously, use a local `go.work` file:
 
@@ -56,12 +57,12 @@ go work use ./centrix
 Experimental packages are maintained by Leraniode. Ideas, feedback, and
 discussion are welcome.
 
-- 💬 [Discussions](https://github.com/leraniode/xgo/discussions)
+- 💬 [Discussions](https://github.com/leraniode/x/discussions)
 
 ---
 
 <p align="left">
-xgo · Experimental Leraniode · Part of Leraniode
+Experimental Leraniode · Part of Leraniode
 </p>
 
 <img

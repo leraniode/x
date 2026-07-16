@@ -1,11 +1,11 @@
 # Changelog
 
-All notable changes to xgo packages are documented here.
+All notable changes to x packages are documented here.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
-Packages in xgo are experimental. APIs may break between commits until a package
+Packages in leraniode/x are experimental. APIs may break between commits until a package
 graduates to its own repository.
 
 ---
