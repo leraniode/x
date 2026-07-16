@@ -3,8 +3,8 @@ package field_test
 import (
 	"testing"
 
-	"github.com/leraniode/xgo/centrix/core"
-	"github.com/leraniode/xgo/centrix/field"
+	"github.com/leraniode/x/centrix/core"
+	"github.com/leraniode/x/centrix/field"
 )
 
 // ─── helpers ──────────────────────────────────────────────────────────────────

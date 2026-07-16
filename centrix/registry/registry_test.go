@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/leraniode/xgo/centrix/registry"
+	"github.com/leraniode/x/centrix/registry"
 )
 
 // ─── Core guarantee: a name always maps to the same ID ────────────────────────

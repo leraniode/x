@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/leraniode/xgo/centrix/core"
+	"github.com/leraniode/x/centrix/core"
 )
 
 // makeSparse builds a SparseVector with k active features spread across a D-dimensional space.

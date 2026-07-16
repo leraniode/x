@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/leraniode/xgo/centrix/core"
+	"github.com/leraniode/x/centrix/core"
 )
 
 // ─── helpers ──────────────────────────────────────────────────────────────────

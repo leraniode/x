@@ -1,3 +1,3 @@
-module github.com/leraniode/xgo/centrix
+module github.com/leraniode/x/centrix
 
 go 1.22

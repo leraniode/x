@@ -28,7 +28,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/leraniode/xgo/centrix/core"
+	"github.com/leraniode/x/centrix/core"
 )
 
 // ─── Validated constants ───────────────────────────────────────────────────────

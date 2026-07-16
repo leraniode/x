@@ -1,6 +1,5 @@
 # Centrix — Technical Reference
-> v0.1 · `github.com/leraniode/xgo/centrix` (experimental)
-> Graduating to `github.com/leraniode/centrix` when stable
+> v0.1 · `github.com/leraniode/x/centrix` (experimental)
 
 ---
 
@@ -40,12 +39,6 @@ on it.
 - Feature encoding or feature space assignment
 - Pipeline execution or routing logic
 - Any import from the caller's ecosystem
-
-```
-Module:  github.com/leraniode/xgo/centrix   (experimental)
-Future:  github.com/leraniode/centrix        (standalone, stable)
-Deps:    none
-```
 
 Centrix imports nothing outside the Go standard library.
 

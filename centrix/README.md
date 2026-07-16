@@ -3,7 +3,7 @@
 [![Go](https://img.shields.io/badge/go-1.22-00ADD8?logo=go)](https://go.dev)
 [![Tests](https://img.shields.io/badge/tests-167%20passing-brightgreen)]()
 [![License](https://img.shields.io/badge/license-MIT-green)](../LICENSE)
-[![Status](https://img.shields.io/badge/status-experimental-orange)](https://github.com/leraniode/xgo)
+[![Status](https://img.shields.io/badge/status-experimental-orange)](https://github.com/leraniode/x)
 
 Sparse signal mathematics library for Go.
 
@@ -35,11 +35,10 @@ The resource constraint is the design target, not an obstacle.
 ## Install
 
 ```bash
-go get github.com/leraniode/xgo/centrix@latest
+go get github.com/leraniode/x/centrix@latest
 ```
 
-This is an experimental package. APIs may change before graduation to
-`github.com/leraniode/centrix`.
+This is an experimental package. APIs may change.
 
 ---
 
@@ -50,9 +49,9 @@ package main
 
 import (
     "fmt"
-    "github.com/leraniode/xgo/centrix/core"
-    "github.com/leraniode/xgo/centrix/field"
-    "github.com/leraniode/xgo/centrix/registry"
+    "github.com/leraniode/x/centrix/core"
+    "github.com/leraniode/x/centrix/field"
+    "github.com/leraniode/x/centrix/registry"
 )
 
 func main() {
