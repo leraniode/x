@@ -1,13 +1,6 @@
-<p align="left">
-    <a href="https://github.com/orgs/leraniode/repositories?q=x">
-        <img src="https://raw.githubusercontent.com/leraniode/.github/main/assets/images/xbrandimage.png" width="600" />
-    </a>
-</p>
-
 # X
 
 [![part of leraniode](https://raw.githubusercontent.com/leraniode/.github/main/assets/badges/partofleraniode.svg)](https://github.com/leraniode)
-[![experimental](https://raw.githubusercontent.com/leraniode/.github/main/assets/badges/experimentalleraniode.svg)](https://github.com/search?q=topic%3Aexperimental+org%3Aleraniode&type=Repositories)
 [![license](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![CI](https://github.com/leraniode/x/actions/workflows/ci.yml/badge.svg)](https://github.com/leraniode/x/actions/workflows/ci.yml)
 
@@ -40,6 +33,7 @@ import "github.com/leraniode/x/centrix/registry"
 ## Structure
 
 ### Go packages
+
 Each package is an independent Go module with its own `go.mod`. To work across
 packages simultaneously, use a local `go.work` file:
 
