@@ -26,7 +26,16 @@ import "github.com/leraniode/x/centrix/field"
 import "github.com/leraniode/x/centrix/registry"
 ```
 
-**Status:** v0.1 complete — all 5 phases built and tested.
+### [`wtone`](./wtone/)
+
+[![Go](https://img.shields.io/badge/go-1.22-00ADD8?logo=go)](https://go.dev)
+
+Wondertone file format and Utility package.
+
+```go
+import "github.com/leraniode/x/wtone"
+import "github.com/leraniode/x/wtone/testutil"
+```
 
 ---
 
@@ -40,6 +49,7 @@ packages simultaneously, use a local `go.work` file:
 ```bash
 go work init
 go work use ./centrix
+go work use ./wtone
 ```
 
 `go.work` is gitignored — it is a local development tool, not part of the repository.
