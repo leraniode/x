@@ -4,7 +4,7 @@
 [![license](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![CI](https://github.com/leraniode/x/actions/workflows/ci.yml/badge.svg)](https://github.com/leraniode/x/actions/workflows/ci.yml)
 
-> Experimental packages for the Leraniode ecosystem.
+> Low coded and experimental packages for the Leraniode ecosystem 🪛.
 
 Packages here are pre-stable. APIs may break between commits.
 
@@ -12,30 +12,9 @@ Packages here are pre-stable. APIs may break between commits.
 
 ## Packages
 
-### [`centrix`](./centrix)
-
-[![Go](https://img.shields.io/badge/go-1.22-00ADD8?logo=go)](https://go.dev)
-[![Tests](https://img.shields.io/badge/tests-167%20passing-brightgreen)]()
-
-Sparse signal mathematics library. Defines the types, algebra, and field dynamics
-for deterministic reasoning and generation systems.
-
-```go
-import "github.com/leraniode/x/centrix/core"
-import "github.com/leraniode/x/centrix/field"
-import "github.com/leraniode/x/centrix/registry"
-```
-
-### [`wtone`](./wtone/)
-
-[![Go](https://img.shields.io/badge/go-1.22-00ADD8?logo=go)](https://go.dev)
-
-Wondertone file format and Utility package.
-
-```go
-import "github.com/leraniode/x/wtone"
-import "github.com/leraniode/x/wtone/testutil"
-```
+- [`centrix`](./centrix) - Sparse signal mathematics library for Go.
+- [`testutil`](./testutil) - Test utilities for leraniode.
+- [`wtone`](./wtone) - Wondertone's file format tool.
 
 ---
 
@@ -58,10 +37,8 @@ go work use ./wtone
 
 ## Contributing
 
-Experimental packages are maintained by Leraniode. Ideas, feedback, and
-discussion are welcome.
-
-- 💬 [Discussions](https://github.com/leraniode/x/discussions)
+Experimental packages are maintained by [DominionDev](https://github.com/dominionthedev).
+If you feel the zeal to hop into leraniode's experimental side, You can open Issues and PRs
 
 ---
 
