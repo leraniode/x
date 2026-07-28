@@ -1,5 +1,4 @@
 // Package testutil provides lightweight test assertion helpers.
-
 package testutil
 
 import (

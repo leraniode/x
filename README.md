@@ -48,7 +48,7 @@ Experimental Leraniode · Part of Leraniode
 
 <img
   align="left"
-  src="https://raw.githubusercontent.com/leraniode/.github/main/assets/footer/leraniodeproductbrandimage.png"
+  src="https://raw.githubusercontent.com/leraniode/.github/main/assets/footer.png"
   alt="Leraniode"
   width="400"
   style="border-radius: 15px;"
