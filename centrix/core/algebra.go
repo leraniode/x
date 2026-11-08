@@ -1,6 +1,9 @@
 package core
 
-import "math"
+import (
+	"math"
+	"slices"
+)
 
 // algebra.go — Tier 1: pure SparseVector mathematics.
 //
@@ -20,8 +23,10 @@ import "math"
 // Energy is always derived, never stored. Invariant 10 holds by construction:
 // there is one source of truth for activation strength.
 func Energy(v SparseVector) float64 {
+	var buf [sumBufSize]FeatureIndex
 	var e float64
-	for _, w := range v {
+	for _, f := range sortedFeatures(v, &buf) {
+		w := v[f]
 		if w < 0 {
 			e -= w
 		} else {
@@ -40,15 +45,22 @@ func Energy(v SparseVector) float64 {
 // field propagation. Use Cosine when direction matters more than magnitude.
 //
 // Runs over the smaller of the two maps for O(min(|a|, |b|)) performance.
+//
+// The sum is taken in ascending FeatureIndex order. Go randomises map
+// iteration and floating-point addition is not associative, so summing in map
+// order would let the last bits of the result change between calls with
+// identical inputs, violating Invariant 1. Sorted order also makes
+// Dot(a, b) and Dot(b, a) bit-identical.
 func Dot(a, b SparseVector) float64 {
 	// Always iterate the smaller map — fewer iterations, same result.
 	if len(a) > len(b) {
 		a, b = b, a
 	}
+	var buf [sumBufSize]FeatureIndex
 	var sum float64
-	for f, wa := range a {
+	for _, f := range sortedFeatures(a, &buf) {
 		if wb, ok := b[f]; ok {
-			sum += wa * wb
+			sum += a[f] * wb
 		}
 	}
 	return sum
@@ -177,9 +189,29 @@ func Filter(v SparseVector, threshold float64) SparseVector {
 // l2norm returns the L2 (Euclidean) norm of v: √(Σ wᵢ²).
 // Used internally by Cosine and Normalize.
 func l2norm(v SparseVector) float64 {
+	var buf [sumBufSize]FeatureIndex
 	var sum float64
-	for _, w := range v {
+	for _, f := range sortedFeatures(v, &buf) {
+		w := v[f]
 		sum += w * w
 	}
 	return math.Sqrt(sum)
+}
+
+// sumBufSize is the stack buffer size used when ordering features for a sum.
+// Vectors with at most this many features are ordered without a heap
+// allocation; larger vectors fall back to a heap slice.
+const sumBufSize = 64
+
+// sortedFeatures returns the feature indices of v in ascending order.
+// Every floating-point sum over a SparseVector goes through it so the order of
+// additions — and therefore the result, bit for bit — never depends on Go's
+// randomised map iteration.
+func sortedFeatures(v SparseVector, buf *[sumBufSize]FeatureIndex) []FeatureIndex {
+	keys := buf[:0]
+	for f := range v {
+		keys = append(keys, f)
+	}
+	slices.Sort(keys)
+	return keys
 }
