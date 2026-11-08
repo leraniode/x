@@ -12,6 +12,42 @@ graduates to its own repository.
 
 ## centrix
 
+### [Unreleased]
+
+#### Added
+
+**`registry` — Aliases**
+
+A concept name is a stable identifier (`lang.python`); a surface form is what
+text contains (`python`). The Registry now keeps the two apart, so concept names
+can stay namespaced while an encoder still finds them.
+
+- `Alias(surface, concept)` — record that a surface form denotes a concept.
+  The concept must already be registered; a surface that already denotes a
+  different concept (as an alias or a concept name) is rejected
+- `Resolve(surface)` — concept name first, then alias; never registers anything,
+  so it is safe on arbitrary input text (unlike `ID`)
+- `AliasSnapshot()`, `NewWithAliases(entries, aliases)`, `AliasLen()` —
+  persistence. Aliases are a separate map, so `Snapshot`/`NewFrom` keep their
+  one-name-per-ID shape
+- `AliasLastSegments(concepts...)` — authoring helper: `lang.python` → `python`.
+  All-or-nothing; one error names every collision
+- `Merge` carries aliases across by concept name, so renumbered IDs stay correct
+- Errors: `ErrEmptySurface`, `ErrUnknownConcept`, `ErrAliasConflict`
+
+#### Fixed
+
+**`core` — bit-identical results (Invariant 1)**
+
+`Dot`, `Energy` and the L2 norm behind `Cosine` and `Normalize` summed in Go map
+iteration order. Floating-point addition is not associative, so identical inputs
+could differ in their last bits between calls (observed: `Cosine` returning
+`0.9999999999999996` and `1` for the same pair). They now sum in ascending
+`FeatureIndex` order. `Dot(a, b)` and `Dot(b, a)` are now bit-identical.
+
+Cost: roughly 1.7x slower `Dot` at k=10 (≈140 ns → ≈245 ns on the development
+machine), growing with k, until vectors move to a sorted representation.
+
 ### [0.1.0] — 2026-07-14
 
 First complete implementation of the Centrix sparse signal mathematics library.
