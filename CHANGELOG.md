@@ -12,7 +12,7 @@ graduates to its own repository.
 
 ## centrix
 
-### [Unreleased]
+### [0.2.0]
 
 #### Added
 
